@@ -15,12 +15,24 @@ Requirements: openssl, wget, python, `acme_tiny.py` in PATH
 
 By now this is just tested on Debian jessie.
 
-File format for /etc/le-certlist/certlist:
+## Getting started
+
+1. Run the setup script to create folders and account key `./le-certlist-setup`.
+2. Create /etc/le-certlist/certlist manually or using `./le-certlist-apache`.
+3. Setup your webserver to provide `/.well-known/acme-challenge/` from `/var/www/challenges`.
+4. Run `./le-certlist-generate` to create private keys, csr and request your first certificate.
+5. Run `./le-certlist-renewal` to check for expiring certificates and renew them automatically.
+
+## File format
+
+Example /etc/le-certlist/certlist for creating two certificates with 3 domains each:
 
 ```
 maindomain.com alias1.com alias2.com
 2nddomain.com example.com other.com
 ```
+ 
+
 
 ## Setup Apache for acme challenge serving
 
