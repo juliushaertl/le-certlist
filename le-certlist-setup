@@ -1,0 +1,14 @@
+#!/bin/sh
+
+mkdir -p /etc/le-certlist
+
+if [ ! -f /etc/le-certlist/account.key ]; then 
+    echo "-> Generate private account key"
+    openssl genrsa 4096 > /etc/le-certlist/account.key
+else
+    echo "-> Private account key already exists"
+fi
+
+echo "-> Setup apache for let's encrypt challenges"
+mkdir -p /var/www/challenges/
+

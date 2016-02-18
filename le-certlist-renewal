@@ -1,0 +1,40 @@
+#!/bin/sh
+
+FOLDER=/etc/le-certlist
+FILE=/etc/le-certlist/certlist
+
+wget -O - https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null
+
+while read line; do
+    [ -z "$line" ] && continue
+
+
+    MAIN=`echo $line | cut -d' ' -f1`
+    TARGET=$FOLDER/$MAIN
+    ALIASES=`echo $line | cut -d' ' -f 1 --complement`
+
+    echo "=> $MAIN"
+
+    expire=$(openssl x509 -enddate -noout -in $TARGET.pem | awk '/After/{split($0,a,"="); print a[2]}')
+    now=$(date +%s);
+    expire=$(date --date="$expire" +%s)
+    timeleft=$(echo "($expire-$now)/60/60/24" | bc)
+
+    if [ "$timeleft" -lt "30" ]; then
+        echo "   - request new certificate for $MAIN"
+        acme_tiny.py --account-key $FOLDER/account.key --csr $TARGET.csr \
+            --acme-dir /var/www/challenges/ > /tmp/signed.crt || continue
+        cp /tmp/signed.crt $TARGET.crt
+        # should be validated here
+        cat /tmp/signed.crt /tmp/intermediate.pem > $TARGET.pem
+        rm /tmp/signed.crt
+
+    else
+        echo "   - skipped ($timeleft days left)"
+    fi
+
+
+done <$FILE
+
+
+rm /tmp/intermediate.pem

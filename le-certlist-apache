@@ -1,0 +1,17 @@
+#!/bin/sh
+# generate list of apache vhosts with ServerName and ServerAlias
+
+CONF_ENABLED=`apache2ctl -S | grep namevhost | grep 443 |  awk '{ print $5 }'  | grep -oE '\/[^\:]+'`
+CERTLIST=/etc/le-certlist/gcertlist
+
+echo -n "" > $CERTLIST
+for CONF in ${CONF_ENABLED}; do
+    LIST=`cat $CONF | sed -n "/<VirtualHost\ \*:443>/,/<\/VirtualHost>/p" | 
+        tr '\t' ' ' | grep -E '^ *(ServerName|ServerAlias)' | 
+        sed -r 's/^( |ServerName|ServerAlias)+//g'`
+    echo $LIST | grep -v '^$' >> $CERTLIST
+done
+
+
+
+

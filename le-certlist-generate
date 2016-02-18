@@ -1,0 +1,46 @@
+#!/bin/sh
+
+FOLDER=/etc/le-certlist
+FILE=$FOLDER/certlist
+
+wget -O - https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null || exit
+
+while read line; do
+    [ -z "$line" ] && continue
+
+    MAIN=`echo $line | cut -d' ' -f1`
+    TARGET=$FOLDER/$MAIN
+
+    echo "=> $MAIN"
+    if [ ! -f $FOLDER/$MAIN.key ]; then
+        echo "  - generating private key for $MAIN"
+        openssl genrsa 4096 > $FOLDER/$MAIN.key
+    else
+        echo "  - private key for $MAIN already exists"
+    fi
+
+    ALIASES=`echo $line | cut -d' ' -f 1 --complement`
+    DATA=`echo $ALIASES | sed "s/^/DNS:${MAIN},DNS:/g" | sed 's/ /,DNS:/g'`
+
+    echo "  - generating CSR for $MAIN"
+    if [ "$MAIN" = "$ALIASES" ]; then
+        openssl req -new -sha256 -key $TARGET.key -subj "/CN=$MAIN" > $TARGET.csr
+    else
+        cat /etc/ssl/openssl.cnf > /tmp/openssl.cnf
+        printf "[SAN]\nsubjectAltName=$DATA" >> /tmp/openssl.cnf 
+        openssl req -new -sha256 -key $TARGET.key -subj "/" -reqexts SAN -config /tmp/openssl.cnf > $TARGET.csr
+        rm /tmp/openssl.cnf
+    fi
+
+    # request certificates
+    if [ ! -f $FOLDER/$MAIN.pem ]; then
+        acme_tiny.py --account-key $FOLDER/account.key --csr $TARGET.csr --acme-dir /var/www/challenges/ > /tmp/signed.crt || continue
+        cp /tmp/signed.crt $TARGET.crt
+        cat /tmp/signed.crt /tmp/intermediate.pem > $TARGET.pem
+        echo "  - certificate installed successfully"
+    else
+        echo "  - certificate exists, skipping request"
+    fi
+
+done <$FILE
+
