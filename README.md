@@ -1,7 +1,5 @@
 # le-certlist
 
-***  ***
-
 This is a collection of shell scripts to automate the process of let's encrypt
 certificate creation and renewal using `acme_tiny` (a 200 line python acme
 client).
