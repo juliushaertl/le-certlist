@@ -2,7 +2,7 @@
 # generate list of apache vhosts with ServerName and ServerAlias
 
 CONF_ENABLED=`apache2ctl -S | grep namevhost | grep 443 |  awk '{ print $5 }'  | grep -oE '\/[^\:]+'`
-CERTLIST=/etc/le-certlist/gcertlist
+CERTLIST=/etc/le-certlist/certlist
 
 echo -n "" > $CERTLIST
 for CONF in ${CONF_ENABLED}; do
