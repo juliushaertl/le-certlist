@@ -1,0 +1,24 @@
+#!/bin/sh
+
+FOLDER=/etc/le-certlist
+FILE=/etc/le-certlist/certlist
+
+wget -O - https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null
+
+while read line; do
+    [ -z "$line" ] && continue
+
+    MAIN=`echo $line | cut -d' ' -f1`
+    TARGET=$FOLDER/$MAIN
+    ALIASES=`echo $line | cut -d' ' -f 1 --complement`
+
+    echo "=> $MAIN"
+    if [ -e "$TARGET.crt" ]; then
+        cat $TARGET.crt /tmp/intermediate.pem > $TARGET.pem
+    fi
+
+
+done <$FILE
+
+
+rm /tmp/intermediate.pem

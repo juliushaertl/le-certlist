@@ -3,7 +3,8 @@
 FOLDER=/etc/le-certlist
 FILE=/etc/le-certlist/certlist
 
-wget -O - https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null
+wget -O - https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null
+
 
 while read line; do
     [ -z "$line" ] && continue
