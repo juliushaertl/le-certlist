@@ -3,7 +3,7 @@
 FOLDER=/etc/le-certlist
 FILE=$FOLDER/certlist
 
-wget -O - https://letsencrypt.org/certs/lets-encrypt-x1-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null || exit
+wget -O - https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem > /tmp/intermediate.pem 2>/dev/null
 
 while read line; do
     [ -z "$line" ] && continue
@@ -41,6 +41,14 @@ while read line; do
     else
         echo "  - certificate exists, skipping request"
     fi
+
+    if [ "$1" = "$MAIN" ]; then
+        acme_tiny.py --account-key $FOLDER/account.key --csr $TARGET.csr --acme-dir /var/www/challenges/ > /tmp/signed.crt || continue
+        cp /tmp/signed.crt $TARGET.crt
+        cat /tmp/signed.crt /tmp/intermediate.pem > $TARGET.pem
+        echo "  - certificate installed successfully"
+    fi
+
 
 done <$FILE
 
